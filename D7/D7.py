@@ -1,20 +1,22 @@
 import fileinput
 
 class Element():
-    def __init__(self, name, previous, level) -> None:
+    def __init__(self, name, previous, size, level) -> None:
         self.name = name
         self.previous = previous
         self.level = level
+        self.size = size
 
 class Directory(Element):
     def __init__(self, name, previous, level) -> None:
         self.childs = []
-        super().__init__(name, previous, level)
+        self.size = 0
+        super().__init__(name, previous, 0, level)
 
     def __str__(self) -> str:
         s = " " * self.level
         s += "- " + self.name 
-        s += " (dir)"
+        s += " (dir, size=" + str(self.size) + ")"
         s += "\n"
         for e in self.childs:
             s += e.__str__()
@@ -22,15 +24,38 @@ class Directory(Element):
 
 class File(Element):
     def __init__(self, name, previous, size, level) -> None:
-        self.size = size
-        super().__init__(name, previous, level)
+        super().__init__(name, previous, size, level)
 
     def __str__(self) -> str:
         s = " " * self.level
         s += "- " + self.name 
-        s += " (file, size=" + self.size + ")"
+        s += " (file, size=" + str(self.size) + ")"
         s += "\n"
         return s
+
+def resolve_size(element):
+    if isinstance(element, Directory):
+        count = 0
+        for c in element.childs:
+            count += resolve_size(c)
+        element.size = count
+        return count
+    else:
+        return element.size
+
+def find_total_size_at_most(directory):
+    if isinstance(directory, Directory):
+        count = 0
+
+        if(directory.size < 100000):
+            count += directory.size
+        
+        for c in directory.childs:
+            count += find_total_size_at_most(c)
+        
+        return count
+    else:
+        return 0
 
 current = Directory("/", None, 0)
 
@@ -46,7 +71,7 @@ for f in fileinput.input():
             dir = Directory(elems[1], current, current.level + 1)
             current.childs.append(dir)
         else:
-            file = File(elems[1], current, elems[0], current.level + 1)
+            file = File(elems[1], current, int(elems[0]), current.level + 1)
             current.childs.append(file)
 
     elif(line == "$ ls"):
@@ -65,4 +90,6 @@ for f in fileinput.input():
             if(e.name == elems[2]):
                 current = e
 
-print(main)
+resolve_size(main)
+# print(main)
+print(find_total_size_at_most(main))
