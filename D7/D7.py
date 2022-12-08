@@ -57,6 +57,18 @@ def find_total_size_at_most(directory):
     else:
         return 0
 
+def find_directory_to_delete(directory, space, smallest):
+    if(directory.size >= space and directory.size < smallest):
+        smallest = directory.size
+            
+    for c in directory.childs:
+        if isinstance(c, Directory):
+            size = find_directory_to_delete(c, space, smallest)
+            if(size < smallest):
+                smallest = size
+
+    return smallest
+
 current = Directory("/", None, 0)
 
 main = current
@@ -92,4 +104,9 @@ for f in fileinput.input():
 
 resolve_size(main)
 # print(main)
-print(find_total_size_at_most(main))
+# print(find_total_size_at_most(main))
+
+necessary_free_space = 30000000 - (70000000 - main.size)
+print(necessary_free_space)
+print(find_directory_to_delete(main, necessary_free_space, main.size))
+
