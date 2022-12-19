@@ -37,6 +37,8 @@ def create_lambda_test(line_test, true, false):
  
 monkeys = []
 
+monkeymod = 1
+
 with open("input.txt") as myfile:
 
     while True:
@@ -47,6 +49,8 @@ with open("input.txt") as myfile:
         items = [int(c) for c in l if len(c) > 0]
         op = create_lambda_op(head[2])
         test = create_lambda_test(*(head[3:]))
+
+        monkeymod *= int(head[3].split(" ")[-1])
         
         monkeys.append(Monkey(items, op, test))
 
@@ -54,3 +58,20 @@ with open("input.txt") as myfile:
             c = next(myfile)
         except StopIteration:
             break
+
+N_rounds = 10000
+counter = [0] * len(monkeys)
+for i in range(N_rounds):
+
+    for j in range(len(monkeys)):
+        m = monkeys[j]
+        i = 0
+        while(i < len(m.items)):
+            obj = m.items[i]
+            counter[j] += 1
+            m.items.remove(obj)
+            new_obj = int(m.operation(obj) % monkeymod)
+            monkeys[m.test(new_obj)].items.append(new_obj)
+
+c = sorted(counter)
+print(c[-1] * c[-2])
